@@ -2,55 +2,22 @@ pipeline {
     agent any
 
     environment {
-        // Specify AWS credentials and region
-        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-        AWS_REGION            = 'us-east-1'
-
-        // Specify Git credentials
-        GIT_CREDENTIALS_ID = 'your-git-credentials-id'
+        GIT_PAT = credentials('git_pat_token') // This pulls the GitHub PAT from Jenkins credentials
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                // Checkout the repository
-                git branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}", url: 'https://github.com/your-repo.git'
+                // Clone the repository using the GitHub PAT
+                git branch: 'main', url: 'https://github.com/your-repo.git', credentialsId: 'git_pat_token'
             }
         }
 
-        stage('Terraform Init') {
+        stage('Echo Command') {
             steps {
-                // Initialize Terraform
-                sh 'terraform init'
+                // Run a simple echo command
+                sh 'echo "Running Jenkins Pipeline with GitHub PAT"'
             }
-        }
-
-        stage('Terraform Plan') {
-            steps {
-                // Run Terraform Plan
-                sh 'terraform plan -out=tfplan'
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                // Apply Terraform Plan
-                sh 'terraform apply -auto-approve tfplan'
-            }
-        }
-    }
-
-    post {
-        always {
-            // Clean up workspace after the pipeline is finished
-            cleanWs()
-        }
-        success {
-            echo 'Terraform apply was successful!'
-        }
-        failure {
-            echo 'Terraform apply failed.'
         }
     }
 }
